@@ -24,6 +24,9 @@ isort = "^5.13.2"
 mypy = "^1.8.0"
 
 
+[tool.pytest.ini_options]
+pythonpath = "."
+
 [tool.isort]
 profile = "black"
 line_length = 79
