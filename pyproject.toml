@@ -34,6 +34,7 @@ line_length = 79
 [tool.mypy]
 ignore_missing_imports = true
 strict = false
+exclude = "tests"
 
 [tool.taskipy.tasks]
 lint = 'ruff . && blue --check . --diff && mypy .'
