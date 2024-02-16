@@ -5,8 +5,13 @@ description = ""
 authors = ["Thiago Campos <commit@thigcampos.com>", "Ivan Santiago <ivansantiago.junior@gmail.com>"]
 readme = "README.md"
 
+[tool.poetry.scripts]
+resma = "resma_cli.main:app"
+
 [tool.poetry.dependencies]
 python = "^3.12"
+typer = {extras = ["all"], version = "^0.9.0"}
+jinja2 = "^3.1.3"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -19,6 +24,9 @@ isort = "^5.13.2"
 mypy = "^1.8.0"
 
 
+[tool.pytest.ini_options]
+pythonpath = "."
+
 [tool.isort]
 profile = "black"
 line_length = 79
@@ -26,6 +34,7 @@ line_length = 79
 [tool.mypy]
 ignore_missing_imports = true
 strict = false
+exclude = "tests"
 
 [tool.taskipy.tasks]
 lint = 'ruff . && blue --check . --diff && mypy .'
