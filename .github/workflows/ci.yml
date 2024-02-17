@@ -1,0 +1,31 @@
+name: Continous Integration
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Installing Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Installing poetry
+        run: pipx install --python python3.12 poetry
+
+      - name: Installing dependencies
+        run: poetry install
+
+      - name: Running linters
+        run: poetry run task lint
+
+      - name: Mypy checking
+        run: poetry run task types
+        
+      - name: Running tests with pytest
+        run: poetry run task test
