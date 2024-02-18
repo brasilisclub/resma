@@ -37,7 +37,8 @@ strict = false
 exclude = "tests"
 
 [tool.taskipy.tasks]
-lint = 'ruff . && blue --check . --diff && mypy .'
+lint = 'ruff . && blue --check . --diff && isort . --check --diff'
+types = 'mypy .'
 format = 'blue .  && isort .'
 pre_test = 'task lint'
 test = 'pytest -s -x --cov=resma_cli -vv'
