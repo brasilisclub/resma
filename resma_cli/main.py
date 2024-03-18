@@ -92,7 +92,6 @@ def build():
 
     env = Environment(loader=FileSystemLoader(templates_dir))
 
-    index_template = templates_dir / 'index.html'
     try:
         template = env.get_template('index.html')
         rendered_html = template.render()
