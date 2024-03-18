@@ -120,6 +120,16 @@ def build():
                 with open(section_dir / 'index.html', 'w') as f:
                     f.write(rendered_html)
 
+            for file in item.iterdir():
+                page = frontmatter.load(file)
+                html = markdown(page.content)
+                template = env.get_template(page.metadata.get('template'))
+                page_dict = {**page.metadata, 'content': html}
+                rendered_html = template.render(page=page_dict)
+
+                with open(section_dir / f'{file.stem}.html', 'w') as f:
+                    f.write(rendered_html)
+
         elif item.suffix == '.md':
             page = frontmatter.load(item)
             html = markdown(page.content)
