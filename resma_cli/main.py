@@ -1,7 +1,9 @@
+import shutil
 import tomllib
 from pathlib import Path
 from typing import Final
 
+import frontmatter
 import typer
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown  # type: ignore
@@ -73,26 +75,61 @@ def build():
 
     contents_dir = Path('./content')
     templates_dir = Path('./templates')
-    print([i for i in contents_dir.glob('*.md')])
+    styles_dir = Path('./styles')
+    static_dir = Path('./static')
 
     public_dir = Path('public')
     public_dir.mkdir(exist_ok=True)
 
+    should_be_on_public = [styles_dir, static_dir]
+
+    for dir in should_be_on_public:
+        shutil.copytree(
+            src=dir,
+            dst=public_dir / dir.name,
+            dirs_exist_ok=True,
+        )
+
     env = Environment(loader=FileSystemLoader(templates_dir))
 
-    for md_file in contents_dir.glob('*.md'):
-        with open(md_file, 'r') as f:
-            md_content = f.read()
-            print(md_content)
-
-        html_content = markdown(md_content, extensions=['fenced_code'])
-        print(html_content)
+    index_template = templates_dir / 'index.html'
+    try:
         template = env.get_template('index.html')
-        rendered_html = template.render(content=html_content)
-        print(rendered_html)
+        rendered_html = template.render()
 
-        output_path = public_dir / 'index.html'
-        with open(output_path, 'w') as f:
+        with open(public_dir / 'index.html', 'w') as f:
             f.write(rendered_html)
+    except FileNotFoundError:
+        typer.secho(
+            'Could not find an index.html template', color=typer.colors.RESET
+        )
+
+    for item in contents_dir.iterdir():
+        if item.is_dir():
+            section_name = item.name
+            section_dir = public_dir / section_name
+            section_dir.mkdir(parents=True, exist_ok=True)
+            index_file = item / '_index.md'
+
+            if index_file.exists():
+                page = frontmatter.load(index_file)
+                html = markdown(page.content)
+                template = env.get_template(page.metadata.get('template'))
+                page_dict = {**page.metadata, 'content': html}
+                rendered_html = template.render(page=page_dict)
+
+                with open(section_dir / 'index.html', 'w') as f:
+                    f.write(rendered_html)
+
+        elif item.suffix == '.md':
+            page = frontmatter.load(item)
+            html = markdown(page.content)
+            template = env.get_template(page.metadata.get('template'))
+            page_dict = {**page.metadata, 'content': html}
+            rendered_html = template.render(page=page_dict)
+            output_page = public_dir / f'{item.stem}.html'
+
+            with open(output_page, 'w') as f:
+                f.write(rendered_html)
 
     typer.secho('Site built successfully', fg=typer.colors.GREEN)
