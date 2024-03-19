@@ -5,7 +5,7 @@ from typing import Final
 
 import frontmatter
 import typer
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from markdown import markdown  # type: ignore
 from typer import Typer
 
@@ -98,10 +98,11 @@ def build():
 
         with open(public_dir / 'index.html', 'w') as f:
             f.write(rendered_html)
-    except FileNotFoundError:
+    except TemplateNotFound:
         typer.secho(
-            'Could not find an index.html template', color=typer.colors.RESET
+            'Could not find an index.html template', fg=typer.colors.BRIGHT_RED
         )
+        raise typer.Exit()
 
     for item in contents_dir.iterdir():
         if item.is_dir():
