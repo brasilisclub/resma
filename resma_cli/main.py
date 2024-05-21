@@ -102,7 +102,7 @@ def build():
         typer.secho(
             'Could not find an index.html template', fg=typer.colors.BRIGHT_RED
         )
-        raise typer.Exit()
+        raise typer.Abort()
 
     for item in contents_dir.iterdir():
         if item.is_dir():
