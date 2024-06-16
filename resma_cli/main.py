@@ -94,10 +94,6 @@ def build():
 
     try:
         template = env.get_template('index.html')
-        rendered_html = template.render()
-
-        with open(public_dir / 'index.html', 'w') as f:
-            f.write(rendered_html)
     except TemplateNotFound:
         typer.secho(
             'Could not find an index.html template', fg=typer.colors.BRIGHT_RED
@@ -122,6 +118,8 @@ def build():
                     f.write(rendered_html)
 
             for file in item.iterdir():
+                if file == index_file:
+                    continue
                 page = frontmatter.load(file)
                 html = markdown(page.content)
                 template = env.get_template(page.metadata.get('template'))
@@ -137,7 +135,10 @@ def build():
             template = env.get_template(page.metadata.get('template'))
             page_dict = {**page.metadata, 'content': html}
             rendered_html = template.render(page=page_dict)
-            output_page = public_dir / f'{item.stem}.html'
+            html_file_name = (
+                'index.html' if item.stem == '_index' else f'{item.stem}.html'
+            )
+            output_page = public_dir / html_file_name
 
             with open(output_page, 'w') as f:
                 f.write(rendered_html)
