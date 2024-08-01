@@ -1,9 +1,10 @@
+import locale
 import shutil
-import tomllib
 from pathlib import Path
 from typing import Final
 
 import frontmatter
+import tomllib  # noqa
 import typer
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from markdown import markdown  # type: ignore
@@ -44,7 +45,7 @@ def start(name: str):
     env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
     template = env.get_template('config.toml.jinja2')
     config = template.render(name=name)
-    with open(project_dir / 'config.toml', 'w') as f:
+    with open(project_dir / 'config.toml', 'w', encoding='utf-8') as f:
         f.write(config)
 
     styled_name = typer.style(name, fg=typer.colors.GREEN)
@@ -55,7 +56,6 @@ def start(name: str):
 def build():
     """Build your site to the public folder"""
     # searching for config.toml
-
     config_file = Path('.') / 'config.toml'
     config_file_exists = config_file.exists()
 
@@ -95,6 +95,7 @@ def build():
 
     env = Environment(loader=FileSystemLoader(templates_dir))
     env.globals['rel_path'] = rel_path
+
     try:
         template = env.get_template('index.html')
     except TemplateNotFound as e:
@@ -130,7 +131,11 @@ def build():
                 }
                 rendered_html = template.render(page=page_dict)
 
-                with open(section_dir / 'index.html', 'w') as f:
+                with open(
+                    section_dir / 'index.html',
+                    'w',
+                    encoding=locale.getpreferredencoding(False),
+                ) as f:
                     f.write(rendered_html)
 
             for file in item.glob('*.md'):
@@ -155,7 +160,11 @@ def build():
                 }
                 rendered_html = template.render(page=page_dict)
 
-                with open(section_dir / f'{file.stem}.html', 'w') as f:
+                with open(
+                    section_dir / f'{file.stem}.html',
+                    'w',
+                    encoding=locale.getpreferredencoding(False),
+                ) as f:
                     f.write(rendered_html)
 
         elif item.suffix == '.md':
@@ -182,7 +191,9 @@ def build():
             )
             output_page = public_dir / html_file_name
 
-            with open(output_page, 'w') as f:
+            with open(
+                output_page, 'w', encoding=locale.getpreferredencoding(False)
+            ) as f:
                 f.write(rendered_html)
 
     typer.secho('Site built successfully', fg=typer.colors.GREEN)

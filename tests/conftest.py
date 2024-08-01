@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_dir():
     temp_dir = Path('temp_test_dir')
     temp_dir.mkdir(exist_ok=True)

@@ -12,7 +12,6 @@ def rel_path(
     file_path: str,
     resource_type: Literal['static', 'style'],
 ) -> str:
-
     levels_to_go_up = context['page']['depth']
 
     relative_path_to_root = '../' * levels_to_go_up

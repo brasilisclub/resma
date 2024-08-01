@@ -21,7 +21,6 @@ toml = "^0.10.2"
 pytest = "^8.0.0"
 pytest-cov = "^4.1.0"
 taskipy = "^1.12.2"
-blue = "^0.9.1"
 ruff = "^0.2.1"
 isort = "^5.13.2"
 mypy = "^1.8.0"
@@ -39,13 +38,25 @@ ignore_missing_imports = true
 strict = false
 exclude = "tests"
 
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+ignore = ['PLR0913', 'PLR0917']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'
+
 [tool.taskipy.tasks]
-lint = 'ruff . && blue --check . --diff && isort . --check --diff'
-types = 'mypy .'
-format = 'blue .  && isort .'
+lint = 'ruff check .; ruff check . --diff'
+format = 'ruff check . --fix; ruff format .'
 pre_test = 'task lint'
 test = 'pytest -s -x --cov=resma_cli -vv'
 post_test = 'coverage html'
+mypy = "mypy . --ignore-missing-imports --check-untyped-defs"
 
 [build-system]
 requires = ["poetry-core"]

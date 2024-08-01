@@ -1,3 +1,4 @@
+import locale
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -53,7 +54,9 @@ def test_build_resma_table_not_found_in_config_toml(temp_dir, monkeypatch):
     (Path('.') / 'templates' / 'index.html').touch()
 
     # erasing resma table from config.toml
-    with open('config.toml', 'w') as f:
+    with open(
+        'config.toml', 'w', encoding=locale.getpreferredencoding(False)
+    ) as f:
         f.write('')
     result = runner.invoke(app, ['build'])
 
