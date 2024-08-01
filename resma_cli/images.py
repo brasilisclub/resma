@@ -14,14 +14,16 @@ def copy_images_and_update_path(
 
     images = re.findall(img_path, no_frontmatter_content)
 
+    md_parent = markdown_file.parent
     content = ''
     for img_path in images:
-        img_file = content_dir / str(
-            img_path
-        )  # getting the actual image file path
+        img_file = (
+            content_dir / str(img_path)
+            if md_parent == 'contents'
+            else md_parent / str(img_path)
+        )
 
         if img_file.exists():
-            print(f'Copying {img_file} to {public_static_dir}')
             shutil.copy2(img_file, public_static_dir)
 
         folders_to_go_up = (
