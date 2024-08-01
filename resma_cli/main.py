@@ -9,6 +9,10 @@ from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from markdown import markdown  # type: ignore
 from typer import Typer
 
+from .images import copy_images_and_update_path
+from .jinja_globals import rel_path
+from .utils import calculate_depth
+
 app = Typer()
 
 CURRENT_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
@@ -29,8 +33,8 @@ def start(name: str):
     try:
         project_dir.mkdir()
     except FileExistsError as e:
-        print('File already exists. Detail: ', str(e))
-        raise typer.Abort()
+        print('File already exists. Detail: ', e)
+        raise typer.Abort() from e
 
     (project_dir / 'content').mkdir()
     (project_dir / 'templates').mkdir()
@@ -72,12 +76,11 @@ def build():
         raise typer.Abort()
 
     # resma project identified, now we can build
-
+    root_dir = Path('.')
     contents_dir = Path('./content')
-    templates_dir = Path('./templates')
     styles_dir = Path('./styles')
     static_dir = Path('./static')
-
+    templates_dir = Path('./templates')
     public_dir = Path('public')
     public_dir.mkdir(exist_ok=True)
 
@@ -91,14 +94,14 @@ def build():
         )
 
     env = Environment(loader=FileSystemLoader(templates_dir))
-
+    env.globals['rel_path'] = rel_path
     try:
         template = env.get_template('index.html')
-    except TemplateNotFound:
+    except TemplateNotFound as e:
         typer.secho(
             'Could not find an index.html template', fg=typer.colors.BRIGHT_RED
         )
-        raise typer.Abort()
+        raise typer.Abort() from e
 
     for item in contents_dir.iterdir():
         if item.is_dir():
@@ -109,21 +112,47 @@ def build():
 
             if index_file.exists():
                 page = frontmatter.load(index_file)
-                html = markdown(page.content)
+
+                corrected_content = copy_images_and_update_path(
+                    contents_dir,
+                    public_dir / 'static',
+                    index_file,
+                    root_dir,
+                    page.content,
+                )
+
+                html = markdown(corrected_content)
                 template = env.get_template(page.metadata.get('template'))
-                page_dict = {**page.metadata, 'content': html}
+                page_dict = {
+                    **page.metadata,
+                    'content': html,
+                    'depth': calculate_depth(index_file, root_dir),
+                }
                 rendered_html = template.render(page=page_dict)
 
                 with open(section_dir / 'index.html', 'w') as f:
                     f.write(rendered_html)
 
-            for file in item.iterdir():
+            for file in item.glob('*.md'):
                 if file == index_file:
                     continue
                 page = frontmatter.load(file)
-                html = markdown(page.content)
+
+                corrected_content = copy_images_and_update_path(
+                    contents_dir,
+                    public_dir / 'static',
+                    file,
+                    root_dir,
+                    page.content,
+                )
+
+                html = markdown(corrected_content)
                 template = env.get_template(page.metadata.get('template'))
-                page_dict = {**page.metadata, 'content': html}
+                page_dict = {
+                    **page.metadata,
+                    'content': html,
+                    'depth': calculate_depth(file, root_dir),
+                }
                 rendered_html = template.render(page=page_dict)
 
                 with open(section_dir / f'{file.stem}.html', 'w') as f:
@@ -131,9 +160,22 @@ def build():
 
         elif item.suffix == '.md':
             page = frontmatter.load(item)
-            html = markdown(page.content)
+
+            corrected_content = copy_images_and_update_path(
+                contents_dir,
+                public_dir / 'static',
+                item,
+                root_dir,
+                page.content,
+            )
+
+            html = markdown(corrected_content)
             template = env.get_template(page.metadata.get('template'))
-            page_dict = {**page.metadata, 'content': html}
+            page_dict = {
+                **page.metadata,
+                'content': html,
+                'depth': calculate_depth(item, root_dir),
+            }
             rendered_html = template.render(page=page_dict)
             html_file_name = (
                 'index.html' if item.stem == '_index' else f'{item.stem}.html'

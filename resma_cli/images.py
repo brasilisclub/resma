@@ -1,0 +1,42 @@
+import re
+import shutil
+from pathlib import Path
+
+
+def copy_images_and_update_path(
+    content_dir: Path,
+    public_static_dir: Path,
+    markdown_file: Path,
+    root_dir: Path,
+    no_frontmatter_content: str,
+) -> str:
+    img_path = re.compile(r'!\[.*\]\((.*)\)')
+
+    images = re.findall(img_path, no_frontmatter_content)
+
+    content = ''
+    for img_path in images:
+        img_file = content_dir / str(
+            img_path
+        )  # getting the actual image file path
+
+        if img_file.exists():
+            print(f'Copying {img_file} to {public_static_dir}')
+            shutil.copy2(img_file, public_static_dir)
+
+        folders_to_go_up = (
+            len(markdown_file.relative_to(root_dir).parts[:-1]) - 1
+        )
+
+        relative_path_to_root = (
+            ('../' * folders_to_go_up) if folders_to_go_up > 0 else './'
+        )
+
+        new_image_path = (
+            f'{relative_path_to_root}{public_static_dir.name}/{img_file.name}'
+        )
+        content = no_frontmatter_content.replace(
+            (str(img_path)), new_image_path
+        )
+
+    return content
