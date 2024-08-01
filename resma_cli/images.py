@@ -15,7 +15,6 @@ def copy_images_and_update_path(
     images = re.findall(img_path, no_frontmatter_content)
 
     md_parent = markdown_file.parent
-    content = ''
     for img_path in images:
         img_file = (
             content_dir / str(img_path)
@@ -37,8 +36,8 @@ def copy_images_and_update_path(
         new_image_path = (
             f'{relative_path_to_root}{public_static_dir.name}/{img_file.name}'
         )
-        content = no_frontmatter_content.replace(
+        no_frontmatter_content = no_frontmatter_content.replace(
             (str(img_path)), new_image_path
         )
 
-    return content
+    return no_frontmatter_content
