@@ -25,5 +25,4 @@ def rel_path(
         case _:
             raise ValueError('resource_type must be either static or style')
 
-    print(context['page']['depth'])
     return resource_path
