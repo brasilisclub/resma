@@ -3,16 +3,13 @@ import shutil
 from pathlib import Path
 from typing import Final
 
-import frontmatter
 import tomllib  # noqa
 import typer
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-from markdown import markdown  # type: ignore
 from typer import Typer
 
-from .images import copy_images_and_update_path
 from .jinja_globals import rel_path
-from .utils import calculate_depth
+from .process_md import process_markdown
 
 app = Typer()
 
@@ -45,7 +42,11 @@ def start(name: str):
     env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
     template = env.get_template('config.toml.jinja2')
     config = template.render(name=name)
-    with open(project_dir / 'config.toml', 'w', encoding='utf-8') as f:
+    with open(
+        project_dir / 'config.toml',
+        'w',
+        encoding=locale.getpreferredencoding(False),
+    ) as f:
         f.write(config)
 
     styled_name = typer.style(name, fg=typer.colors.GREEN)
@@ -57,9 +58,8 @@ def build():
     """Build your site to the public folder"""
     # searching for config.toml
     config_file = Path('.') / 'config.toml'
-    config_file_exists = config_file.exists()
 
-    if not config_file_exists:
+    if not config_file.exists():
         typer.secho('Not a resma project', fg=typer.colors.RED)
         raise typer.Abort()
 
@@ -97,7 +97,7 @@ def build():
     env.globals['rel_path'] = rel_path
 
     try:
-        template = env.get_template('index.html')
+        env.get_template('index.html')
     except TemplateNotFound as e:
         typer.secho(
             'Could not find an index.html template', fg=typer.colors.BRIGHT_RED
@@ -112,88 +112,32 @@ def build():
             index_file = item / '_index.md'
 
             if index_file.exists():
-                page = frontmatter.load(index_file)
-
-                corrected_content = copy_images_and_update_path(
-                    contents_dir,
-                    public_dir / 'static',
-                    index_file,
-                    root_dir,
-                    page.content,
+                process_markdown(
+                    file=index_file,
+                    jinja_env=env,
+                    content_dir=contents_dir,
+                    public_dir=public_dir,
+                    root_dir=root_dir,
                 )
-
-                html = markdown(corrected_content)
-                template = env.get_template(page.metadata.get('template'))
-                page_dict = {
-                    **page.metadata,
-                    'content': html,
-                    'depth': calculate_depth(index_file, root_dir),
-                }
-                rendered_html = template.render(page=page_dict)
-
-                with open(
-                    section_dir / 'index.html',
-                    'w',
-                    encoding=locale.getpreferredencoding(False),
-                ) as f:
-                    f.write(rendered_html)
-
             for file in item.glob('*.md'):
                 if file == index_file:
                     continue
-                page = frontmatter.load(file)
 
-                corrected_content = copy_images_and_update_path(
-                    contents_dir,
-                    public_dir / 'static',
-                    file,
-                    root_dir,
-                    page.content,
+                process_markdown(
+                    file=file,
+                    jinja_env=env,
+                    content_dir=contents_dir,
+                    public_dir=public_dir,
+                    root_dir=root_dir,
+                    section_dir=section_dir,
                 )
-
-                html = markdown(corrected_content)
-                template = env.get_template(page.metadata.get('template'))
-                page_dict = {
-                    **page.metadata,
-                    'content': html,
-                    'depth': calculate_depth(file, root_dir),
-                }
-                rendered_html = template.render(page=page_dict)
-
-                with open(
-                    section_dir / f'{file.stem}.html',
-                    'w',
-                    encoding=locale.getpreferredencoding(False),
-                ) as f:
-                    f.write(rendered_html)
-
         elif item.suffix == '.md':
-            page = frontmatter.load(item)
-
-            corrected_content = copy_images_and_update_path(
-                contents_dir,
-                public_dir / 'static',
-                item,
-                root_dir,
-                page.content,
+            process_markdown(
+                file=item,
+                jinja_env=env,
+                content_dir=contents_dir,
+                public_dir=public_dir,
+                root_dir=root_dir,
             )
-
-            html = markdown(corrected_content)
-            template = env.get_template(page.metadata.get('template'))
-            page_dict = {
-                **page.metadata,
-                'content': html,
-                'depth': calculate_depth(item, root_dir),
-            }
-            rendered_html = template.render(page=page_dict)
-            html_file_name = (
-                'index.html' if item.stem == '_index' else f'{item.stem}.html'
-            )
-            output_page = public_dir / html_file_name
-
-            with open(
-                output_page, 'w', encoding=locale.getpreferredencoding(False)
-            ) as f:
-                f.write(rendered_html)
 
     typer.secho('Site built successfully', fg=typer.colors.GREEN)
