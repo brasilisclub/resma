@@ -2,7 +2,7 @@ import locale
 from pathlib import Path
 
 import frontmatter
-from jinja2 import Environment
+from jinja2 import Environment, TemplateNotFound
 from markdown import markdown  # type: ignore
 
 from resma_cli.images import copy_images_and_update_path
@@ -18,13 +18,24 @@ def process_markdown(
     section_dir: Path | None = None,
 ):
     page = frontmatter.load(file)
-
+    if (
+        not page.metadata
+        or not page.metadata.get('template')
+        or not page.metadata.get('title')
+    ):
+        raise ValueError(f'Frontmatter of {file} malformed')
     corrected_content = copy_images_and_update_path(
         content_dir, public_dir / 'static', file, root_dir, page.content
     )
 
     html = markdown(corrected_content)
-    template = jinja_env.get_template(page.metadata.get('template'))
+    try:
+        template = jinja_env.get_template(page.metadata.get('template'))
+    except TemplateNotFound:
+        raise TemplateNotFound(
+            f"Template {page.metadata.get('template')} not found"
+        )
+
     page_dict = {
         **page.metadata,
         'content': html,

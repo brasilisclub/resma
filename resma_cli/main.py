@@ -1,11 +1,11 @@
 import locale
 import shutil
+import tomllib
 from pathlib import Path
 from typing import Final
 
-import tomllib  # noqa
 import typer
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+from jinja2 import Environment, FileSystemLoader
 from typer import Typer
 
 from .jinja_globals import rel_path
@@ -77,16 +77,28 @@ def build():
 
     # resma project identified, now we can build
     root_dir = Path('.')
-    contents_dir = Path('./content')
-    styles_dir = Path('./styles')
-    static_dir = Path('./static')
-    templates_dir = Path('./templates')
+    contents_dir = root_dir / 'content'
+    styles_dir = root_dir / 'styles'
+    static_dir = root_dir / 'static'
+    templates_dir = root_dir / 'templates'
     public_dir = Path('public')
     public_dir.mkdir(exist_ok=True)
 
-    should_be_on_public = [styles_dir, static_dir]
+    # content and templates must exist and not be empty
+    content_is_empty = not contents_dir.exists() or not any(
+        contents_dir.iterdir()
+    )
+    template_is_empty = not templates_dir.exists() or not any(
+        templates_dir.iterdir()
+    )
+    if content_is_empty or template_is_empty:
+        typer.secho(
+            'Content and Templates directories cannot be empty',
+            fg=typer.colors.RED,
+        )
+        raise typer.Abort()
 
-    for dir in should_be_on_public:
+    for dir in [styles_dir, static_dir]:  # should be on public
         shutil.copytree(
             src=dir,
             dst=public_dir / dir.name,
@@ -95,49 +107,42 @@ def build():
 
     env = Environment(loader=FileSystemLoader(templates_dir))
     env.globals['rel_path'] = rel_path
-
     try:
-        env.get_template('index.html')
-    except TemplateNotFound as e:
-        typer.secho(
-            'Could not find an index.html template', fg=typer.colors.BRIGHT_RED
-        )
+        for item in contents_dir.iterdir():
+            if item.is_dir():
+                section_dir = public_dir / item.name
+                section_dir.mkdir(parents=True, exist_ok=True)
+                index_file = item / '_index.md'
+
+                if index_file.exists():
+                    process_markdown(
+                        file=index_file,
+                        jinja_env=env,
+                        content_dir=contents_dir,
+                        public_dir=public_dir,
+                        root_dir=root_dir,
+                    )
+                for file in item.glob('*.md'):
+                    if file != index_file:
+                        process_markdown(
+                            file=file,
+                            jinja_env=env,
+                            content_dir=contents_dir,
+                            public_dir=public_dir,
+                            root_dir=root_dir,
+                            section_dir=section_dir,
+                        )
+            elif item.suffix == '.md':
+                process_markdown(
+                    file=item,
+                    jinja_env=env,
+                    content_dir=contents_dir,
+                    public_dir=public_dir,
+                    root_dir=root_dir,
+                )
+
+        typer.secho('Site built successfully', fg=typer.colors.GREEN)
+
+    except Exception as e:
+        typer.secho(f'Error: {e}', fg=typer.colors.RED)
         raise typer.Abort() from e
-
-    for item in contents_dir.iterdir():
-        if item.is_dir():
-            section_name = item.name
-            section_dir = public_dir / section_name
-            section_dir.mkdir(parents=True, exist_ok=True)
-            index_file = item / '_index.md'
-
-            if index_file.exists():
-                process_markdown(
-                    file=index_file,
-                    jinja_env=env,
-                    content_dir=contents_dir,
-                    public_dir=public_dir,
-                    root_dir=root_dir,
-                )
-            for file in item.glob('*.md'):
-                if file == index_file:
-                    continue
-
-                process_markdown(
-                    file=file,
-                    jinja_env=env,
-                    content_dir=contents_dir,
-                    public_dir=public_dir,
-                    root_dir=root_dir,
-                    section_dir=section_dir,
-                )
-        elif item.suffix == '.md':
-            process_markdown(
-                file=item,
-                jinja_env=env,
-                content_dir=contents_dir,
-                public_dir=public_dir,
-                root_dir=root_dir,
-            )
-
-    typer.secho('Site built successfully', fg=typer.colors.GREEN)

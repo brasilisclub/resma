@@ -39,6 +39,7 @@ strict = false
 exclude = "tests"
 
 [tool.ruff]
+target-version = "py312"
 line-length = 79
 
 [tool.ruff.lint]

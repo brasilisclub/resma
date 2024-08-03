@@ -34,7 +34,7 @@ def test_build_resma_project_not_found(temp_dir, monkeypatch):
     assert 'Not a resma project' in result.output
 
 
-def test_build_not_a_index_html(temp_dir, monkeypatch):
+def test_build_empty_project(temp_dir, monkeypatch):
     monkeypatch.chdir(temp_dir)
 
     runner.invoke(app, ['start', 'project'])
@@ -43,7 +43,7 @@ def test_build_not_a_index_html(temp_dir, monkeypatch):
     result = runner.invoke(app, ['build'])
 
     assert result.exit_code == 1
-    assert 'Could not find an index.html template' in result.output
+    assert 'Content and Templates directories cannot be empty' in result.output
 
 
 def test_build_resma_table_not_found_in_config_toml(temp_dir, monkeypatch):
