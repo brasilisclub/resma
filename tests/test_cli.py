@@ -1,6 +1,6 @@
 import locale
-from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from resma_cli.main import app
@@ -51,7 +51,6 @@ def test_build_resma_table_not_found_in_config_toml(temp_dir, monkeypatch):
     runner.invoke(app, ['start', 'project'])
 
     monkeypatch.chdir('project')
-    (Path('.') / 'templates' / 'index.html').touch()
 
     # erasing resma table from config.toml
     with open(
@@ -62,3 +61,30 @@ def test_build_resma_table_not_found_in_config_toml(temp_dir, monkeypatch):
 
     assert result.exit_code == 1
     assert 'config.toml should have a resma table' in result.output
+
+
+@pytest.mark.parametrize(
+    ('args', 'expected_output', 'expected_exit_code'),
+    [
+        ([], 'Missing command', 2),
+        (
+            ['--help'],
+            'Resma CLI Static Site Generator',
+            0,
+        ),
+    ],
+    ids=['default', 'help'],
+)
+def test_main(args, expected_output, expected_exit_code):
+    result = runner.invoke(app, args)
+
+    assert result.exit_code == expected_exit_code
+    assert expected_output in result.output
+
+
+def test_build_full_resma_project_ok(full_resma_project, monkeypatch):
+    monkeypatch.chdir(full_resma_project)
+    result = runner.invoke(app, ['build'])
+
+    assert result.exit_code == 0
+    assert 'Site built successfully' in result.output

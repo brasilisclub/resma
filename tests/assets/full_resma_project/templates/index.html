@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title> {{ page.title }} </title>
+	</head>
+	<link rel="stylesheet" href="{{ rel_path('style.css', 'style') }}">
+	<body>
+		{{ page.content }}
+
+		<p>Other image</p>
+		<img src="{{ rel_path('lighthouse.jpg', 'static') }}" alt="lighthouse">
+	</body>
+</html>
