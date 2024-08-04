@@ -16,6 +16,8 @@ def copy_images_and_update_path(
 
     md_parent = markdown_file.parent
     for img_path in images:
+        if 'http' in str(img_path):
+            continue
         img_file = (
             content_dir / str(img_path)
             if md_parent == 'contents'
