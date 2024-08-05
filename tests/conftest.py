@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_dir():
     temp_dir = Path('temp_test_dir')
     temp_dir.mkdir(exist_ok=True)
@@ -14,7 +14,7 @@ def temp_dir():
     shutil.rmtree(temp_dir)
 
 
-@pytest.fixture()
+@pytest.fixture
 def full_resma_project(temp_dir):
     # copy resma project from assets to temp_dir
     shutil.copytree(
