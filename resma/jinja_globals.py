@@ -1,5 +1,3 @@
-# get relative path function to be used from jinja template to img or href
-
 from typing import Literal
 
 from jinja2 import pass_context
