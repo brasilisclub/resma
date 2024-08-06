@@ -3,7 +3,7 @@ import locale
 import pytest
 from typer.testing import CliRunner
 
-from resma_cli.main import app
+from resma.main import app
 
 runner = CliRunner()
 

@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "resma-cli"
+name = "resma"
 version = "0.1.0"
 description = ""
 authors = ["Thiago Campos <commit@thigcampos.com>", "Ivan Santiago <ivansantiago.junior@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.scripts]
-resma = "resma_cli.main:app"
+resma = "resma.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -28,9 +28,6 @@ mypy = "^1.11.1"
 [tool.pytest.ini_options]
 pythonpath = "."
 
-[tool.isort]
-profile = "black"
-line_length = 79
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -46,6 +43,9 @@ preview = true
 select = ['I', 'F', 'E', 'W', 'PL', 'PT']
 ignore = ['PLR0913', 'PLR0917']
 
+[tool.ruff.lint.isort]
+default-section = "third-party"
+
 [tool.ruff.format]
 preview = true
 quote-style = 'single'
@@ -54,7 +54,7 @@ quote-style = 'single'
 lint = 'ruff check .; ruff check . --diff'
 format = 'ruff check . --fix; ruff format .'
 pre_test = 'task lint'
-test = 'pytest -s -x --cov=resma_cli -vv'
+test = 'pytest -s -x --cov=resma -vv'
 post_test = 'coverage html'
 mypy = "mypy . --ignore-missing-imports --check-untyped-defs"
 

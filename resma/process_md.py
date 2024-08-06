@@ -5,8 +5,8 @@ import frontmatter
 from jinja2 import Environment, TemplateNotFound
 from markdown import markdown  # type: ignore
 
-from resma_cli.images import copy_images_and_update_path
-from resma_cli.utils import calculate_depth
+from resma.images import copy_images_and_update_path
+from resma.utils import calculate_depth
 
 
 def process_markdown(
