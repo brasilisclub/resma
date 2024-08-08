@@ -173,9 +173,9 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 
 @app.command()
-def serve():
+def serve(port: int = 8080):
     """Run a http server from public folder"""
-    PORT = 8080
+    PORT = port
     Handler = CustomHTTPRequestHandler
 
     os.chdir('public')
