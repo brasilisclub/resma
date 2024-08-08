@@ -113,21 +113,14 @@ def build():
     try:
         for item in contents_dir.iterdir():
             if item.is_dir():
+                index_file = item / '_index.md'
                 section_dir = public_dir / item.name
                 section_dir.mkdir(parents=True, exist_ok=True)
-                index_file = item / '_index.md'
-
-                if index_file.exists():
-                    process_markdown(
-                        file=index_file,
-                        jinja_env=env,
-                        content_dir=contents_dir,
-                        public_dir=public_dir,
-                        root_dir=root_dir,
-                    )
+                section_pages = []
+                
                 for file in item.glob('*.md'):
                     if file != index_file:
-                        process_markdown(
+                        page_dict = process_markdown(
                             file=file,
                             jinja_env=env,
                             content_dir=contents_dir,
@@ -135,6 +128,19 @@ def build():
                             root_dir=root_dir,
                             section_dir=section_dir,
                         )
+                        section_pages.append(page_dict)
+
+                    elif index_file.exists():
+                        process_markdown(
+                            file=index_file,
+                            jinja_env=env,
+                            content_dir=contents_dir,
+                            public_dir=public_dir,
+                            root_dir=root_dir,
+                            section_dir=section_dir,
+                            section_pages=section_pages
+                        )
+
             elif item.suffix == '.md':
                 process_markdown(
                     file=item,
