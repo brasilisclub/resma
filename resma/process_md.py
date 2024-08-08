@@ -10,7 +10,7 @@ from resma.images import copy_images_and_update_path
 from resma.utils import calculate_depth
 
 
-def validate_frontmatter(page):
+def validate_frontmatter(page, file):
     if (
         not page.metadata
         or not page.metadata.get('template')
@@ -35,10 +35,10 @@ def process_markdown(
     public_dir: Path,
     root_dir: Path,
     section_dir: Path | None = None,
-    section_pages: List | None = None
+    section_pages: List | None = None,
 ):
     page = frontmatter.load(file)
-    validate_frontmatter(page)
+    validate_frontmatter(page, file)
     corrected_content = copy_images_and_update_path(
         content_dir, public_dir / 'static', file, root_dir, page.content
     )
