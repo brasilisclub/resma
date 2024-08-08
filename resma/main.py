@@ -46,10 +46,10 @@ def start(name: str):
     template = env.get_template('config.toml.jinja2')
     config = template.render(name=name)
     with open(
-            project_dir / 'config.toml',
-            'w',
-            encoding=locale.getpreferredencoding(False),
-            ) as f:
+        project_dir / 'config.toml',
+        'w',
+        encoding=locale.getpreferredencoding(False),
+    ) as f:
         f.write(config)
 
     styled_name = typer.style(name, fg=typer.colors.GREEN)
@@ -74,8 +74,8 @@ def build():
 
     if not resma_table:
         typer.secho(
-                'config.toml should have a resma table', fg=typer.colors.RED
-                )
+            'config.toml should have a resma table', fg=typer.colors.RED
+        )
         raise typer.Abort()
 
     # resma project identified, now we can build
@@ -89,24 +89,24 @@ def build():
 
     # content and templates must exist and not be empty
     content_is_empty = not contents_dir.exists() or not any(
-            contents_dir.iterdir()
-            )
+        contents_dir.iterdir()
+    )
     template_is_empty = not templates_dir.exists() or not any(
-            templates_dir.iterdir()
-            )
+        templates_dir.iterdir()
+    )
     if content_is_empty or template_is_empty:
         typer.secho(
-                'Content and Templates directories cannot be empty',
-                fg=typer.colors.RED,
-                )
+            'Content and Templates directories cannot be empty',
+            fg=typer.colors.RED,
+        )
         raise typer.Abort()
 
     for dir in [styles_dir, static_dir]:  # should be on public
         shutil.copytree(
-                src=dir,
-                dst=public_dir / dir.name,
-                dirs_exist_ok=True,
-                )
+            src=dir,
+            dst=public_dir / dir.name,
+            dirs_exist_ok=True,
+        )
 
     env = Environment(loader=FileSystemLoader(templates_dir))
     env.globals['rel_path'] = rel_path
@@ -119,30 +119,30 @@ def build():
 
                 if index_file.exists():
                     process_markdown(
-                            file=index_file,
-                            jinja_env=env,
-                            content_dir=contents_dir,
-                            public_dir=public_dir,
-                            root_dir=root_dir,
-                            )
-                for file in item.glob('*.md'):
-                    if file != index_file:
-                        process_markdown(
-                                file=file,
-                                jinja_env=env,
-                                content_dir=contents_dir,
-                                public_dir=public_dir,
-                                root_dir=root_dir,
-                                section_dir=section_dir,
-                                )
-            elif item.suffix == '.md':
-                process_markdown(
-                        file=item,
+                        file=index_file,
                         jinja_env=env,
                         content_dir=contents_dir,
                         public_dir=public_dir,
                         root_dir=root_dir,
+                    )
+                for file in item.glob('*.md'):
+                    if file != index_file:
+                        process_markdown(
+                            file=file,
+                            jinja_env=env,
+                            content_dir=contents_dir,
+                            public_dir=public_dir,
+                            root_dir=root_dir,
+                            section_dir=section_dir,
                         )
+            elif item.suffix == '.md':
+                process_markdown(
+                    file=item,
+                    jinja_env=env,
+                    content_dir=contents_dir,
+                    public_dir=public_dir,
+                    root_dir=root_dir,
+                )
 
         typer.secho('Site built successfully', fg=typer.colors.GREEN)
 
@@ -159,8 +159,9 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.endswith('/'):
             directory_path = self.path[1:]  # Remove leading '/'
             index_file_path = os.path.join(directory_path, 'index.html')
-            if (os.path.isdir(directory_path) and
-                os.path.exists(index_file_path)):
+            if os.path.isdir(directory_path) and os.path.exists(
+                index_file_path
+            ):
                 self.path += 'index.html'
             elif self.path != '/':
                 self.path = self.path[:-1] + '.html'
@@ -179,7 +180,8 @@ def serve():
 
     os.chdir('public')
 
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        typer.secho(f"Serving at http://127.0.0.1:{PORT}",
-            fg=typer.colors.GREEN)
+    with socketserver.TCPServer(('', PORT), Handler) as httpd:
+        typer.secho(
+            f'Serving at http://127.0.0.1:{PORT}', fg=typer.colors.GREEN
+        )
         httpd.serve_forever()
