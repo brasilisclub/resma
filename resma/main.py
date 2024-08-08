@@ -1,5 +1,8 @@
+import http.server
 import locale
+import os
 import shutil
+import socketserver
 import tomllib
 from pathlib import Path
 from typing import Final
@@ -146,3 +149,39 @@ def build():
     except Exception as e:
         typer.secho(f'Error: {e}', fg=typer.colors.RED)
         raise typer.Abort() from e
+
+
+class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if 'static' in self.path or 'styles' in self.path:
+            return super().do_GET()
+
+        if self.path.endswith('/'):
+            directory_path = self.path[1:]  # Remove leading '/'
+            index_file_path = os.path.join(directory_path, 'index.html')
+            if os.path.isdir(directory_path) and os.path.exists(
+                index_file_path
+            ):
+                self.path += 'index.html'
+            elif self.path != '/':
+                self.path = self.path[:-1] + '.html'
+            else:
+                return super().do_GET()
+        elif not os.path.isfile(self.path[1:]):
+            self.path += '.html'
+        return super().do_GET()
+
+
+@app.command()
+def serve(port: int = 8080):
+    """Run a http server from public folder"""
+    PORT = port
+    Handler = CustomHTTPRequestHandler
+
+    os.chdir('public')
+
+    with socketserver.TCPServer(('', PORT), Handler) as httpd:
+        typer.secho(
+            f'Serving at http://127.0.0.1:{PORT}', fg=typer.colors.GREEN
+        )
+        httpd.serve_forever()
