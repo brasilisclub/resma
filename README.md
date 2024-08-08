@@ -1,51 +1,113 @@
-# Resma CLI
-A CLI tool to generate static websites. 
+# Resma
 
-- [Installation](#Installation)
+**Resma** is a static site generator (SSG) written in Python. Below you'll find information on how to set up the development environment, run the application, and run tests. 
 
-## Instalation
-There are multiple ways to install Resma.
+## License
 
-### MacOS and GNU-Linux
-You are able to install Resma from its binaries, simply run:
+Resma is licensed under the [GNU General Public License v3.0](LICENSE).
 
+## Installation
+
+As of now, external installation is not yet launched. You can still set up and use Resma locally by following these instructions.
+
+## Setting Up the Development Environment
+
+To set up the development environment for Resma, you'll need to have Python 3.12 installed. You can use [Poetry](https://python-poetry.org/) to manage dependencies and run commands.
+
+1. **Clone the Repository:**
+
+   ```sh
+   git clone <repository-url>
+   cd resma
+   ```
+
+2. **Install Poetry:**
+
+   If you don't have Poetry installed, you can install it by following the instructions on the [Poetry installation page](https://python-poetry.org/docs/#installation).
+
+3. **Install Dependencies:**
+
+   ```sh
+   poetry install
+   ```
+
+   This command will install all the necessary dependencies for both the application and development.
+
+4. **Activate the Virtual Environment:**
+
+   ```sh
+   poetry shell
+   ```
+
+## Running the Application
+
+To run the application, use the following command:
+
+```sh
+resma
 ```
-curl -sSL https://install.resma.dev | python3 -
-```
 
-### All OSes
-You can also install it from PyPI:
+This command will start the Resma application as defined in `resma.main:app`.
 
-```
-pip install resma
-```
+## Development Commands
 
-## Folder Structure
-To easy our users transition, Resma-CLI use a similiar folder structure as others famous SSGs:
+Resma uses `taskipy` for task management. Here are some useful commands:
 
-|-- config.toml
+- **Linting:**
 
-|-- content
+  ```sh
+  task lint
+  ```
 
-|-- templates
+  This command will run Ruff to check for code issues and display any differences.
 
-|-- styles
+- **Formatting:**
 
-|-- static
+  ```sh
+  task format
+  ```
 
-The `content` folder holds all markdown files, each of them represents an active page of your website, 
-while a section (such as a blog) is represented by a folder and defined with a `_index.md` file. 
+  This command will automatically format your code using Ruff.
 
-├── content/
+- **Run Tests:**
 
-│   └── blog/
+  ```sh
+  task test
+  ```
 
-│       ├── _index.md
+  This will run the test suite using pytest and display coverage information.
 
-│       ├── first.md
+- **Run Mypy:**
 
-│       └── second.md
+  ```sh
+  task mypy
+  ```
 
+  This will run Mypy for type checking.
 
-A `public` folder will be generated containing all your website files, after the build.
+## Development Tools Configuration
 
+- **Pytest:**
+
+  Configuration for pytest is specified in `pyproject.toml` under `[tool.pytest.ini_options]`.
+
+- **Mypy:**
+
+  Configuration for Mypy is specified under `[tool.mypy]`.
+
+- **Ruff:**
+
+  Configuration for Ruff, including linting and formatting settings, is specified under `[tool.ruff]`.
+
+## Contribution
+
+If you would like to contribute to Resma, please fork the repository and submit a pull request with your changes. Ensure that your changes pass the linting and testing requirements before submitting.
+
+## Contact
+
+For any questions or support, please contact:
+
+- Thiago Campos: [commit@thigcampos.com](mailto:commit@thigcampos.com)
+- Ivan Santiago: [ivansantiago.junior@gmail.com](mailto:ivansantiago.junior@gmail.com)
+
+Thank you for using Resma!
