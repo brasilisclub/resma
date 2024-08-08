@@ -20,6 +20,27 @@ CURRENT_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 TEMPLATES_DIR: Final[Path] = CURRENT_SCRIPT_PATH.parent / 'templates'
 
 
+def validate_resma_project():
+    # searching for config.toml
+    config_file = Path('.') / 'config.toml'
+
+    if not config_file.exists():
+        typer.secho('Not a resma project', fg=typer.colors.RED)
+        raise typer.Abort()
+
+    with config_file.open('rb') as f:
+        config_toml = tomllib.load(f)
+
+    # config file should have resma table
+    resma_table = config_toml.get('resma')
+
+    if not resma_table:
+        typer.secho(
+            'config.toml should have a resma table', fg=typer.colors.RED
+        )
+        raise typer.Abort()
+
+
 @app.callback()
 def main():
     """Resma CLI Static Site Generator"""
@@ -59,40 +80,26 @@ def start(name: str):
 @app.command()
 def build():
     """Build your site to the public folder"""
-    # searching for config.toml
-    config_file = Path('.') / 'config.toml'
+    validate_resma_project()
+    root_path = Path('.')
 
-    if not config_file.exists():
-        typer.secho('Not a resma project', fg=typer.colors.RED)
-        raise typer.Abort()
+    directories = {
+        'root': root_path,
+        'contents': root_path / 'content',
+        'styles': root_path / 'styles',
+        'static': root_path / 'static',
+        'templates': root_path / 'templates',
+        'public': Path('public'),
+    }
 
-    with config_file.open('rb') as f:
-        config_toml = tomllib.load(f)
-
-    # config file should have resma table
-    resma_table = config_toml.get('resma')
-
-    if not resma_table:
-        typer.secho(
-            'config.toml should have a resma table', fg=typer.colors.RED
-        )
-        raise typer.Abort()
-
-    # resma project identified, now we can build
-    root_dir = Path('.')
-    contents_dir = root_dir / 'content'
-    styles_dir = root_dir / 'styles'
-    static_dir = root_dir / 'static'
-    templates_dir = root_dir / 'templates'
-    public_dir = Path('public')
-    public_dir.mkdir(exist_ok=True)
+    directories['public'].mkdir(exist_ok=True)
 
     # content and templates must exist and not be empty
-    content_is_empty = not contents_dir.exists() or not any(
-        contents_dir.iterdir()
+    content_is_empty = not directories['contents'].exists() or not any(
+        directories['contents'].iterdir()
     )
-    template_is_empty = not templates_dir.exists() or not any(
-        templates_dir.iterdir()
+    template_is_empty = not directories['templates'].exists() or not any(
+        directories['templates'].iterdir()
     )
     if content_is_empty or template_is_empty:
         typer.secho(
@@ -101,47 +108,56 @@ def build():
         )
         raise typer.Abort()
 
-    for dir in [styles_dir, static_dir]:  # should be on public
+    for dir in [
+        directories['styles'],
+        directories['static'],
+    ]:  # should be on public
         shutil.copytree(
             src=dir,
-            dst=public_dir / dir.name,
+            dst=directories['public'] / dir.name,
             dirs_exist_ok=True,
         )
 
-    env = Environment(loader=FileSystemLoader(templates_dir))
+    env = Environment(loader=FileSystemLoader(directories['templates']))
     env.globals['rel_path'] = rel_path
     try:
-        for item in contents_dir.iterdir():
+        for item in directories['contents'].iterdir():
             if item.is_dir():
-                section_dir = public_dir / item.name
-                section_dir.mkdir(parents=True, exist_ok=True)
                 index_file = item / '_index.md'
+                section_dir = directories['public'] / item.name
+                section_dir.mkdir(parents=True, exist_ok=True)
+                section_pages = []
 
-                if index_file.exists():
-                    process_markdown(
-                        file=index_file,
-                        jinja_env=env,
-                        content_dir=contents_dir,
-                        public_dir=public_dir,
-                        root_dir=root_dir,
-                    )
                 for file in item.glob('*.md'):
                     if file != index_file:
-                        process_markdown(
+                        page_context = process_markdown(
                             file=file,
                             jinja_env=env,
-                            content_dir=contents_dir,
-                            public_dir=public_dir,
-                            root_dir=root_dir,
+                            content_dir=directories['contents'],
+                            public_dir=directories['public'],
+                            root_dir=directories['root'],
                             section_dir=section_dir,
                         )
+                        section_pages.append(page_context)
+
+                    elif index_file.exists():
+                        process_markdown(
+                            file=index_file,
+                            jinja_env=env,
+                            content_dir=directories['contents'],
+                            public_dir=directories['public'],
+                            root_dir=directories['root'],
+                            section_dir=section_dir,
+                            section_pages=section_pages,
+                        )
+
             elif item.suffix == '.md':
                 process_markdown(
                     file=item,
                     jinja_env=env,
-                    content_dir=contents_dir,
-                    public_dir=public_dir,
-                    root_dir=root_dir,
+                    content_dir=directories['contents'],
+                    public_dir=directories['public'],
+                    root_dir=directories['root'],
                 )
 
         typer.secho('Site built successfully', fg=typer.colors.GREEN)
