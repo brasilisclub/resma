@@ -178,19 +178,13 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         if not self.path.endswith('/'):
             self.path += '/'
-        print(self.path)
+        if  self.path.startswith('/'):
+            self.path = self.path[1:]
         index_file_path = os.path.join(self.path, 'index.html')
-        print(index_file_path)
-        print(os.path.isdir(self.path))
-        print(os.path.exists(index_file_path))
         if os.path.isdir(self.path) and os.path.exists(index_file_path):
             self.path += 'index.html'
         else:
-            self.path += '.html'
-            print(self.path)
-            return super().do_GET()
-        if os.path.isfile(self.path[1:]):
-            self.path += 'index.html'
+            self.path = self.path[:-1] + '.html'
         print(self.path)
         return super().do_GET()
 
