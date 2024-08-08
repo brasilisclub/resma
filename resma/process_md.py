@@ -1,6 +1,5 @@
 import locale
 from pathlib import Path
-from typing import List
 
 import frontmatter
 from jinja2 import Environment, TemplateNotFound
@@ -35,7 +34,7 @@ def process_markdown(
     public_dir: Path,
     root_dir: Path,
     section_dir: Path | None = None,
-    section_pages: List | None = None,
+    section_pages: list | None = None,
 ):
     page = frontmatter.load(file)
     validate_frontmatter(page, file)
