@@ -169,22 +169,29 @@ def build():
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        if 'static' in self.path or 'styles' in self.path:
+        if (
+            'static' in self.path
+            or 'styles' in self.path
+            or 'favicon' in self.path
+        ):
             return super().do_GET()
 
-        if self.path.endswith('/'):
-            directory_path = self.path[1:]  # Remove leading '/'
-            index_file_path = os.path.join(directory_path, 'index.html')
-            if os.path.isdir(directory_path) and os.path.exists(
-                index_file_path
-            ):
-                self.path += 'index.html'
-            elif self.path != '/':
-                self.path = self.path[:-1] + '.html'
-            else:
-                return super().do_GET()
-        elif not os.path.isfile(self.path[1:]):
+        if not self.path.endswith('/'):
+            self.path += '/'
+        print(self.path)
+        index_file_path = os.path.join(self.path, 'index.html')
+        print(index_file_path)
+        print(os.path.isdir(self.path))
+        print(os.path.exists(index_file_path))
+        if os.path.isdir(self.path) and os.path.exists(index_file_path):
+            self.path += 'index.html'
+        else:
             self.path += '.html'
+            print(self.path)
+            return super().do_GET()
+        if os.path.isfile(self.path[1:]):
+            self.path += 'index.html'
+        print(self.path)
         return super().do_GET()
 
 
