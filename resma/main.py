@@ -80,9 +80,9 @@ def start(name: str):
 @app.command()
 def build():
     """Build your site to the public folder"""
-    
+
     validate_resma_project()
-    
+
     root_path = Path('.')
     directories = {
         'root': root_path,
@@ -92,9 +92,9 @@ def build():
         'templates': root_path / 'templates',
         'public': Path('public'),
     }
-    
+
     directories['public'].mkdir(exist_ok=True)
-    
+
     # content and templates must exist and not be empty
     content_is_empty = not directories['contents'].exists() or not any(
         directories['contents'].iterdir()
@@ -113,7 +113,7 @@ def build():
     for dir in [
         directories['styles'],
         directories['static'],
-    ]:  
+    ]:
         shutil.copytree(
             src=dir,
             dst=directories['public'] / dir.name,
@@ -174,7 +174,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_root_index(self):
         self.path += 'index.html'
         return super().do_GET()
-    
+
     def handle_static(self):
         if (
             'static' in self.path
