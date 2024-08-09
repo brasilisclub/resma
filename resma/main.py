@@ -80,9 +80,10 @@ def start(name: str):
 @app.command()
 def build():
     """Build your site to the public folder"""
+    
     validate_resma_project()
+    
     root_path = Path('.')
-
     directories = {
         'root': root_path,
         'contents': root_path / 'content',
@@ -91,9 +92,9 @@ def build():
         'templates': root_path / 'templates',
         'public': Path('public'),
     }
-
+    
     directories['public'].mkdir(exist_ok=True)
-
+    
     # content and templates must exist and not be empty
     content_is_empty = not directories['contents'].exists() or not any(
         directories['contents'].iterdir()
@@ -108,10 +109,11 @@ def build():
         )
         raise typer.Abort()
 
+    # Styles and Static content should be on public
     for dir in [
         directories['styles'],
         directories['static'],
-    ]:  # should be on public
+    ]:  
         shutil.copytree(
             src=dir,
             dst=directories['public'] / dir.name,
@@ -120,6 +122,7 @@ def build():
 
     env = Environment(loader=FileSystemLoader(directories['templates']))
     env.globals['rel_path'] = rel_path
+
     try:
         for item in directories['contents'].iterdir():
             if item.is_dir():
@@ -140,16 +143,16 @@ def build():
                         )
                         section_pages.append(page_context)
 
-                    elif index_file.exists():
-                        process_markdown(
-                            file=index_file,
-                            jinja_env=env,
-                            content_dir=directories['contents'],
-                            public_dir=directories['public'],
-                            root_dir=directories['root'],
-                            section_dir=section_dir,
-                            section_pages=section_pages,
-                        )
+                if index_file.exists():
+                    process_markdown(
+                        file=index_file,
+                        jinja_env=env,
+                        content_dir=directories['contents'],
+                        public_dir=directories['public'],
+                        root_dir=directories['root'],
+                        section_dir=section_dir,
+                        section_pages=section_pages,
+                    )
 
             elif item.suffix == '.md':
                 process_markdown(
