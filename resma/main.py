@@ -171,7 +171,11 @@ def build():
 
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
+    def handle_root_index(self):
+        self.path += 'index.html'
+        return super().do_GET()
+    
+    def handle_static(self):
         if (
             'static' in self.path
             or 'styles' in self.path
@@ -179,16 +183,28 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         ):
             return super().do_GET()
 
+    def normalize_path(self):
         if not self.path.endswith('/'):
             self.path += '/'
-        if  self.path.startswith('/'):
+
+        if self.path.startswith('/'):
             self.path = self.path[1:]
-        index_file_path = os.path.join(self.path, 'index.html')
-        if os.path.isdir(self.path) and os.path.exists(index_file_path):
-            self.path += 'index.html'
+
+    def do_GET(self):
+        self.handle_static()
+
+        root = '/'
+        if self.path == root:
+            self.handle_root_index()
+        else:
+            self.normalize_path()
+
+        index_path = os.path.join(self.path, 'index.html')
+        if os.path.isdir(self.path) and os.path.exists(index_path):
+            self.path = index_path
         else:
             self.path = self.path[:-1] + '.html'
-        print(self.path)
+
         return super().do_GET()
 
 
