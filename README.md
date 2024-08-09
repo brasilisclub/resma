@@ -2,13 +2,13 @@
 
 **Resma** is a static site generator (SSG) written in Python. Below you'll find information on how to set up the development environment, run the application, and run tests. 
 
-## License
-
-Resma is licensed under the [GNU General Public License v3.0](LICENSE).
-
 ## Installation
 
-As of now, external installation is not yet launched. You can still set up and use Resma locally by following these instructions.
+As of now, you can use `pipx` to install Resma in your machine:
+
+```sh
+pipx install git+https://github.com/brasilisclub/resma-cli
+ ```
 
 ## Setting Up the Development Environment
 
@@ -109,5 +109,9 @@ For any questions or support, please contact:
 
 - Thiago Campos: [commit@thigcampos.com](mailto:commit@thigcampos.com)
 - Ivan Santiago: [ivansantiago.junior@gmail.com](mailto:ivansantiago.junior@gmail.com)
+
+## License
+
+Resma is licensed under the [GNU General Public License v3.0](LICENSE).
 
 Thank you for using Resma!
