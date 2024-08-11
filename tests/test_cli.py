@@ -66,14 +66,15 @@ def test_build_resma_table_not_found_in_config_toml(temp_dir, monkeypatch):
 @pytest.mark.parametrize(
     ('args', 'expected_output', 'expected_exit_code'),
     [
-        ([], 'Missing command', 2),
+        ([], 'resma --help', 0),
         (
             ['--help'],
             'Resma CLI Static Site Generator',
             0,
         ),
+        (['--version'], '0.1.0', 0),
     ],
-    ids=['default', 'help'],
+    ids=['default', 'help', 'version'],
 )
 def test_main(args, expected_output, expected_exit_code):
     result = runner.invoke(app, args)
