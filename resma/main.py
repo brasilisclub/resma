@@ -171,39 +171,13 @@ def build():
 
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def handle_root_index(self):
-        self.path += 'index.html'
-        return super().do_GET()
-
-    def handle_static(self):
-        if (
-            'static' in self.path
-            or 'styles' in self.path
-            or 'favicon' in self.path
-        ):
-            return super().do_GET()
-
-    def normalize_path(self):
-        if not self.path.endswith('/'):
-            self.path += '/'
-
-        if self.path.startswith('/'):
-            self.path = self.path[1:]
-
     def do_GET(self):
-        self.handle_static()
-
-        root = '/'
-        if self.path == root:
-            self.handle_root_index()
-        else:
-            self.normalize_path()
-
-        index_path = os.path.join(self.path, 'index.html')
-        if os.path.isdir(self.path) and os.path.exists(index_path):
-            self.path = index_path
-        else:
-            self.path = self.path[:-1] + '.html'
+        if (
+            not self.path.endswith('/')  # not a folder
+            and 'static' not in self.path
+            and 'styles' not in self.path
+        ):
+            self.path += '.html'
 
         return super().do_GET()
 
@@ -211,13 +185,12 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 @app.command()
 def serve(port: int = 8080):
     """Run a http server from public folder"""
-    PORT = port
     Handler = CustomHTTPRequestHandler
 
     os.chdir('public')
 
-    with socketserver.TCPServer(('', PORT), Handler) as httpd:
+    with socketserver.TCPServer(('', port), Handler) as httpd:
         typer.secho(
-            f'Serving at http://127.0.0.1:{PORT}', fg=typer.colors.GREEN
+            f'Serving at http://127.0.0.1:{port}', fg=typer.colors.GREEN
         )
         httpd.serve_forever()
