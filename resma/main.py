@@ -5,11 +5,13 @@ import shutil
 import socketserver
 import tomllib
 from pathlib import Path
-from typing import Final
+from typing import Annotated, Final
 
 import typer
 from jinja2 import Environment, FileSystemLoader
 from typer import Typer
+
+from resma import __version__
 
 from .jinja_globals import rel_path
 from .process_md import process_markdown
@@ -41,10 +43,20 @@ def validate_resma_project():
         raise typer.Abort()
 
 
-@app.callback()
-def main():
+def get_version(flag):
+    if flag:
+        print(__version__)
+
+
+@app.callback(invoke_without_command=True)
+def main(
+    version: Annotated[
+        bool, typer.Option(callback=get_version, is_flag=True)
+    ] = False,
+):
     """Resma CLI Static Site Generator"""
-    ...
+    resma_command = typer.style('resma --help', fg=typer.colors.GREEN)
+    print(f'Use {resma_command} to see the available commands')
 
 
 @app.command()
