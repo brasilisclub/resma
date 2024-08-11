@@ -80,9 +80,10 @@ def start(name: str):
 @app.command()
 def build():
     """Build your site to the public folder"""
-    validate_resma_project()
-    root_path = Path('.')
 
+    validate_resma_project()
+
+    root_path = Path('.')
     directories = {
         'root': root_path,
         'contents': root_path / 'content',
@@ -108,10 +109,11 @@ def build():
         )
         raise typer.Abort()
 
+    # Styles and Static content should be on public
     for dir in [
         directories['styles'],
         directories['static'],
-    ]:  # should be on public
+    ]:
         shutil.copytree(
             src=dir,
             dst=directories['public'] / dir.name,
@@ -120,6 +122,7 @@ def build():
 
     env = Environment(loader=FileSystemLoader(directories['templates']))
     env.globals['rel_path'] = rel_path
+
     try:
         for item in directories['contents'].iterdir():
             if item.is_dir():
@@ -140,16 +143,16 @@ def build():
                         )
                         section_pages.append(page_context)
 
-                    elif index_file.exists():
-                        process_markdown(
-                            file=index_file,
-                            jinja_env=env,
-                            content_dir=directories['contents'],
-                            public_dir=directories['public'],
-                            root_dir=directories['root'],
-                            section_dir=section_dir,
-                            section_pages=section_pages,
-                        )
+                if index_file.exists():
+                    process_markdown(
+                        file=index_file,
+                        jinja_env=env,
+                        content_dir=directories['contents'],
+                        public_dir=directories['public'],
+                        root_dir=directories['root'],
+                        section_dir=section_dir,
+                        section_pages=section_pages,
+                    )
 
             elif item.suffix == '.md':
                 process_markdown(
@@ -169,35 +172,25 @@ def build():
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        if 'static' in self.path or 'styles' in self.path:
-            return super().do_GET()
-
-        if self.path.endswith('/'):
-            directory_path = self.path[1:]  # Remove leading '/'
-            index_file_path = os.path.join(directory_path, 'index.html')
-            if os.path.isdir(directory_path) and os.path.exists(
-                index_file_path
-            ):
-                self.path += 'index.html'
-            elif self.path != '/':
-                self.path = self.path[:-1] + '.html'
-            else:
-                return super().do_GET()
-        elif not os.path.isfile(self.path[1:]):
+        if (
+            not self.path.endswith('/')  # not a folder
+            and 'static' not in self.path
+            and 'styles' not in self.path
+        ):
             self.path += '.html'
+
         return super().do_GET()
 
 
 @app.command()
 def serve(port: int = 8080):
     """Run a http server from public folder"""
-    PORT = port
     Handler = CustomHTTPRequestHandler
 
     os.chdir('public')
 
-    with socketserver.TCPServer(('', PORT), Handler) as httpd:
+    with socketserver.TCPServer(('', port), Handler) as httpd:
         typer.secho(
-            f'Serving at http://127.0.0.1:{PORT}', fg=typer.colors.GREEN
+            f'Serving at http://127.0.0.1:{port}', fg=typer.colors.GREEN
         )
         httpd.serve_forever()
