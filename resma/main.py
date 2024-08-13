@@ -9,7 +9,7 @@ from typing import Annotated, Final
 
 import typer
 from jinja2 import Environment, FileSystemLoader
-from typer import Typer
+from typer import Context, Typer
 
 from resma import __version__
 
@@ -47,18 +47,22 @@ def validate_resma_project():
         raise typer.Abort()
 
 
-def get_version(flag):
+def get_version(flag: bool):
     if flag:
         print(__version__)
+        raise typer.Exit()
 
 
 @app.callback(invoke_without_command=True)
 def main(
+    ctx: Context,
     version: Annotated[
-        bool, typer.Option(callback=get_version, is_flag=True)
+        bool, typer.Option(callback=get_version, is_flag=True, is_eager=True)
     ] = False,
 ):
     """Resma CLI Static Site Generator"""
+    if ctx.invoked_subcommand:
+        return
     resma_command = typer.style('resma --help', fg=typer.colors.GREEN)
     print(f'Use {resma_command} to see the available commands')
 
@@ -203,8 +207,13 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 def serve(port: int = 8080):
     """Run a http server from public folder"""
     Handler = CustomHTTPRequestHandler
-
-    os.chdir('public')
+    try:
+        os.chdir('public')
+    except FileNotFoundError as e:
+        typer.secho('public folder not found', fg=typer.colors.RED)
+        resma_build = typer.style('resma build', fg=typer.colors.GREEN)
+        typer.secho(f'Run {resma_build} before running "resma serve" again')
+        raise typer.Abort() from e
 
     with socketserver.TCPServer(('', port), Handler) as httpd:
         typer.secho(
