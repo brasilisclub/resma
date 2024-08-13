@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Thiago Campos <commit@thigcampos.com>", "Ivan Santiago <ivansantiago.junior@gmail.com>"]
 readme = "README.md"
+packages = [{include = "resma"}]
 
 [tool.poetry.scripts]
 resma = "resma.main:app"
