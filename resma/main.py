@@ -22,7 +22,7 @@ CURRENT_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 TEMPLATES_DIR: Final[Path] = CURRENT_SCRIPT_PATH.parent / 'templates'
 
 
-def sort_by_key(page_metadata, key='date'):
+def sort_by_key(page_metadata, key='title'):
     return page_metadata[key]
 
 
