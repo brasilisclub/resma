@@ -22,6 +22,10 @@ CURRENT_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 TEMPLATES_DIR: Final[Path] = CURRENT_SCRIPT_PATH.parent / 'templates'
 
 
+def sort_by_key(page_metadata, key='title'):
+    return page_metadata[key]
+
+
 def validate_resma_project():
     # searching for config.toml
     config_file = Path('.') / 'config.toml'
@@ -156,6 +160,7 @@ def build():
                         section_pages.append(page_context)
 
                 if index_file.exists():
+                    section_pages.sort(key=sort_by_key, reverse=True)
                     process_markdown(
                         file=index_file,
                         jinja_env=env,
