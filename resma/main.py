@@ -195,10 +195,16 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if (
             not self.path.endswith('/')  # not a folder
+            and not Path(f'./{self.path}').is_dir()
             and 'static' not in self.path
             and 'styles' not in self.path
         ):
             self.path += '.html'
+        elif (
+            self.path.endswith('/')
+            and Path(f'./{self.path[:-1]}.html').exists()
+        ):
+            self.path = self.path[:-1] + '.html'  # remove trailing slash
 
         return super().do_GET()
 
